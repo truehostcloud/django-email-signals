@@ -10,12 +10,19 @@ from .constraint_checker import comparison_requires_2_params
 
 def render_js(cls):
     """Forcing all media forms to be deferred."""
-    return [
-        format_html(
-            '<script defer src="{}"></script>', cls.absolute_path(path)
-        )
-        for path in cls._js
-    ]
+    render_scripts = []
+    for path in cls._js:
+        script_str = cls.absolute_path(path)
+        if script_str.startswith("<script"):
+            script_str = str(script_str).replace("<script", "<script defer")
+        else:
+            # don't add defer jquery
+            if "jquery" not in script_str:
+                script_str = f'<script defer src="{script_str}"></script>'
+            else:
+                script_str = f'<script src="{script_str}"></script>'
+        render_scripts.append(format_html(script_str))
+    return render_scripts
 
 
 forms.widgets.Media.render_js = render_js
