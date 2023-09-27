@@ -8,6 +8,14 @@ from .utils import get_param_from_obj
 from .constraint_checker import comparison_requires_2_params
 
 
+def should_defer_js(script_str):
+    """Check if the script should be deferred."""
+    defer_matches = ["email_signals", "ckeditor"]
+    for match in defer_matches:
+        if match in script_str:
+            return True
+
+
 def render_js(cls):
     """Forcing all media forms to be deferred."""
     render_scripts = []
@@ -16,8 +24,7 @@ def render_js(cls):
         if script_str.startswith("<script"):
             script_str = str(script_str).replace("<script", "<script defer")
         else:
-            # don't add defer jquery
-            if "jquery" not in script_str:
+            if should_defer_js(script_str):
                 script_str = f'<script defer src="{script_str}"></script>'
             else:
                 script_str = f'<script src="{script_str}"></script>'
@@ -29,6 +36,7 @@ forms.widgets.Media.render_js = render_js
 
 
 class SignalAdminForm(forms.ModelForm):
+
     class Meta:
         model = models.Signal
         fields = "__all__"
